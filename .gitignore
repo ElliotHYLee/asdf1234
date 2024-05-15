@@ -2,3 +2,4 @@
 *.npy
 *.pyc
 *.npz
+*.pth
