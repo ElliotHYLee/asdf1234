@@ -70,6 +70,10 @@ def plot_rho_24(rho_date:np.ndarray, alt:float):
     plt.show()
 
 
+
+
+
+
 if __name__ == "__main__":
     rho_2017 = prep_data_range([2017])
     rho_2017_01_01 = get_rho_at_date(rho_2017, 1, 1, 2017)
