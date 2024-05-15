@@ -127,11 +127,10 @@ def get_datasets_pytorch(train_ds = [i for i in range(2011, 2017)], test_ds = [2
     returns: the training, validation, and test datasets as pytorch Dataset objects
     """
     print("Preparing training data...")
-    train_dataset = move_alt_axis_for_pytorch(prep_data_range(train_ds))
-    min_val = np.min(train_dataset)
-    max_val = np.max(train_dataset)
-    
-    train_dataset, val_dataset = split_val(train_dataset, train_ratio=train_ratio, shuffle=shuffle)
+    original_trainset = move_alt_axis_for_pytorch(prep_data_range(train_ds))
+
+
+    train_dataset, val_dataset = split_val(original_trainset, train_ratio=train_ratio, shuffle=shuffle)
     train_dataset = RhoDataset(np_data=train_dataset)
     val_dataset = RhoDataset(np_data=val_dataset)
     print("Preparing test data...")
@@ -142,7 +141,7 @@ def get_datasets_pytorch(train_ds = [i for i in range(2011, 2017)], test_ds = [2
     print(f"{'Val Set Shape:':<15} {val_dataset.shape()}")
     print(f"{'Test Set Shape:':<15} {test_data.shape()}")
     
-    return train_dataset, val_dataset, test_data, min_val, max_val
+    return train_dataset, val_dataset, test_data, original_trainset
 
 if __name__ == "__main__":
     #train_ds, val_ds, test_ds = get_datasets_pytorch(train_ratio=0.8, shuffle=True)
@@ -154,9 +153,8 @@ if __name__ == "__main__":
     print(f"Min: {np.min(data):.4f}")
     print(f"Max: {np.max(data):.4f}")
 
-    # normalize the data between -1 and 1
-    data = (data - np.min(data))/(np.max(data) - np.min(data))
-    data = 2 * data - 1
+    # standardize the data
+    data = (data - np.mean(data)) / np.std(data)
     
 
     # show mean and std
