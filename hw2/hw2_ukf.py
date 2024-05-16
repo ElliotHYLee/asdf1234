@@ -54,7 +54,7 @@ R = np.eye(6)*10**-1 # Measurement noise covariance. Shape: (6, 6)
 ukf = UnscentedKalmanFilter(dim_x=6, dim_z=6)
 ukf.set_fx(fx)
 
-N=200
+N=2
 states = [x]
 for i in range(1, N):
     print('Iteration:', i)
@@ -62,33 +62,32 @@ for i in range(1, N):
     print("sigma potins")
     # print(sigma_points)
 
-    x_pred, P_pred = ukf.predict(sigma_points, dt_list[i-1])
+    x_pred, P_pred = ukf.predict(sigma_points, dt_list[i-1], Q)
     print(x_pred.shape)
     print(x_pred)
 
+    x_pred, R_new = ukf.update(x_pred, meas_pos[i], R)
 
     x = x_pred
     Q = P_pred
+    R = R_new
     states.append(x)
 
+# # Plotting the results (3,2) plots, first 3 colrums pos x, y, z, last 3 colrums vel x, y, z
+# states = np.array(states)   
+# pos = states[:, :3]
+# vel = states[:, 3:]
 
+# fig, axs = plt.subplots(3, 2, figsize=(12, 12))
+# for i in range(3):
+#     axs[i, 0].plot(pos[:, i], 'b.-', alpha=0.5, label='Propagated')
+#     axs[i, 0].plot(meas_pos[:, i], 'g.-', label='Mesurement')
+#     axs[i, 0].set_ylabel(f'Position {["x", "y", "z"][i]} (km)')
+#     axs[i, 0].legend()
+#     axs[i, 1].plot(vel[:, i], 'b', alpha=0.5, label='Propagated')
+#     axs[i, 1].plot(meas_vel[:, i], 'g--', label='Mesurement')
+#     axs[i, 1].set_ylabel(f'Velocity {["x", "y", "z"][i]} (km/s)')
+#     axs[i, 1].legend()
 
-
-# Plotting the results (3,2) plots, first 3 colrums pos x, y, z, last 3 colrums vel x, y, z
-states = np.array(states)   
-pos = states[:, :3]
-vel = states[:, 3:]
-
-fig, axs = plt.subplots(3, 2, figsize=(12, 12))
-for i in range(3):
-    axs[i, 0].plot(pos[:, i], 'b.-', alpha=0.5, label='Propagated')
-    axs[i, 0].plot(meas_pos[:, i], 'g.-', label='Mesurement')
-    axs[i, 0].set_ylabel(f'Position {["x", "y", "z"][i]} (km)')
-    axs[i, 0].legend()
-    axs[i, 1].plot(vel[:, i], 'b', alpha=0.5, label='Propagated')
-    axs[i, 1].plot(meas_vel[:, i], 'g--', label='Mesurement')
-    axs[i, 1].set_ylabel(f'Velocity {["x", "y", "z"][i]} (km/s)')
-    axs[i, 1].legend()
-
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()

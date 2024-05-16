@@ -33,7 +33,7 @@ class UnscentedKalmanFilter:
             sigma_points[self.dim_x + i + 1] = x - self.gamma * Psqrt[:, i]
         return sigma_points
 
-    def predict(self, sigma_points, dt):
+    def predict(self, sigma_points, dt, Q):
         x_pred = np.zeros(self.dim_x)
         P_pred = np.zeros((self.dim_x, self.dim_x))
         
@@ -44,15 +44,15 @@ class UnscentedKalmanFilter:
         for i in range(2 * self.dim_x + 1):
             y = sigma_points[i] - x_pred
             P_pred += self.Wc[i] * np.outer(y, y)
-        P_pred += self.Q
+        P_pred += Q
         
         return x_pred, P_pred
     
-    def update(self, x, z):
+    def update(self, x, z, R):
         sigma_points = self.sigma_points()
         Z = np.zeros((2 * self.dim_x + 1, self.dim_z))
         z_pred = np.zeros(self.dim_z)
-        Pz = np.zeros((self.dim_z, self.dim_z))
+
         Pxz = np.zeros((self.dim_x, self.dim_z))
         
         for i in range(2 * self.dim_x + 1):
@@ -61,17 +61,17 @@ class UnscentedKalmanFilter:
         
         for i in range(2 * self.dim_x + 1):
             y = Z[i] - z_pred
-            Pz += self.Wc[i] * np.outer(y, y)
+            R += self.Wc[i] * np.outer(y, y)
         
-        Pz += self.R
+        R += self.R
         
         for i in range(2 * self.dim_x + 1):
             x_diff = sigma_points[i] - x
             z_diff = Z[i] - z_pred
             Pxz += self.Wc[i] * np.outer(x_diff, z_diff)
         
-        K = Pxz @ np.linalg.inv(Pz)
+        K = Pxz @ np.linalg.inv(R)
         
         x_new += K @ (z - z_pred)
-        P_new -= K @ Pz @ K.T
-        return x_new, P_new
+        R_new -= K @ R @ K.T
+        return x_new, R_new
