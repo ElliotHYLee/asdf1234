@@ -24,14 +24,14 @@ dt_list = (t_measurement_time[1:] - t_measurement_time[:-1]) # TimeDelta object.
 # gps measurement data
 meas_pos = noisy_measurement[:, 0:3] # measured position. Shape: (N, 3)
 meas_vel = noisy_measurement[:, 3:6] # measured velocity. Shape: (N, 3)
+# add more gaussian noise to the measurement for fun
+# meas_pos += np.random.normal(0, 10**3, meas_pos.shape)
+# meas_vel += np.random.normal(0, 10**0, meas_vel.shape)
 
 # Initial state vector
 position = [3235.64171524, 2693.72565982, -5335.42793567] 
 velocity = [-4.87430005, 5.89879341, 0.01977648] 
-t_astropy = Time(t_measurement[0]) # Time object
 x = np.hstack((position, velocity)) # initial state vector. Shape: (6,)
-# print(x.shape)
-# print(x)
 
 # fx
 def fx(x, dt):
@@ -45,11 +45,12 @@ def hx(x):
 
 Q = np.eye(6)*10**-5 # Process noise covariance. Shape: (6, 6)
 R = np.eye(6)*10**-1 # Measurement noise covariance. Shape: (6, 6)
-ukf = UnscentedKalmanFilter(dim_x=6, dim_z=6, fx=fx, hx=hx, Q=Q, R=R, alpha=1e-3, beta=2, kappa=0)
+ukf = UnscentedKalmanFilter(dim_x=6, dim_z=6, fx=fx, hx=hx, Q=Q, R=R, alpha=10**-3, beta=2, kappa=0)
 ukf.x = x
 
-# N = 100
+N = 100
 states = [x]
+
 for i in range(1, N):
     print('Iteration:', i)
     ukf.predict(dt_list[i-1])
@@ -64,13 +65,14 @@ pos = states[:, :3]
 vel = states[:, 3:]
 
 fig, axs = plt.subplots(3, 2, figsize=(12, 12))
+subdata_idx = N
 for i in range(3):
-    axs[i, 0].plot(pos[:, i], 'b.-', alpha=0.5, label='Propagated')
-    axs[i, 0].plot(meas_pos[:, i], 'g.-', label='Mesurement')
+    axs[i, 0].plot(pos[:subdata_idx, i], 'b.-', alpha=1, label='UKF')
+    axs[i, 0].plot(meas_pos[:subdata_idx, i], 'g--',alpha=0.9, label='Mesurement')
     axs[i, 0].set_ylabel(f'Position {["x", "y", "z"][i]} (km)')
     axs[i, 0].legend()
-    axs[i, 1].plot(vel[:, i], 'b', alpha=0.5, label='Propagated')
-    axs[i, 1].plot(meas_vel[:, i], 'g--', label='Mesurement')
+    axs[i, 1].plot(vel[:subdata_idx, i], 'b.-', alpha=1, label='UKF')
+    axs[i, 1].plot(meas_vel[:subdata_idx, i], 'g--', alpha=0.9, label='Mesurement')
     axs[i, 1].set_ylabel(f'Velocity {["x", "y", "z"][i]} (km/s)')
     axs[i, 1].legend()
 
